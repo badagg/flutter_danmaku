@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import './controller.dart';
+import 'controller.dart';
 
 enum TransitionDirection {
   // 从左到右
@@ -8,7 +8,7 @@ enum TransitionDirection {
   rtl,
 }
 
-class DanmuItem extends StatefulWidget {
+class Bullet extends StatefulWidget {
   final int id;
   final double stime;
   final int mode;
@@ -25,9 +25,9 @@ class DanmuItem extends StatefulWidget {
   final TransitionDirection direction;
   final ValueChanged onComplete;
 
-  final DanmuController controller;
+  final DanmakuController controller;
 
-  DanmuItem(
+  Bullet(
       {Key key,
       this.id,
       this.stime,
@@ -47,10 +47,10 @@ class DanmuItem extends StatefulWidget {
       : super(key: key);
 
   @override
-  _DanmuItemState createState() => _DanmuItemState();
+  _BulletState createState() => _BulletState();
 }
 
-class _DanmuItemState extends State<DanmuItem>
+class _BulletState extends State<Bullet>
     with SingleTickerProviderStateMixin {
   AnimationController _animationController;
   Animation<Offset> _animation;

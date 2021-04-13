@@ -1,4 +1,4 @@
-class DanmuItemData {
+class DanmakuItemModel {
   double stime;
   int mode;
   double size;
@@ -10,7 +10,7 @@ class DanmuItemData {
   String text;
   int duration = 6000;
 
-  DanmuItemData.fromMap(Map<String, dynamic> map) {
+  DanmakuItemModel.fromMap(Map<String, dynamic> map) {
     this.stime = double.parse(map['stime']);
     this.mode = int.parse(map['mode']);
     this.size = double.parse(map['size']);

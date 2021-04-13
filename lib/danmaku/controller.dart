@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 
-class DanmuController extends ChangeNotifier {
+class DanmakuController extends ChangeNotifier {
   bool isPause;
   int pauseTimeStamp;
 
-  DanmuController({this.isPause, this.pauseTimeStamp});
+  DanmakuController({this.isPause, this.pauseTimeStamp});
 
   trigger() {
     notifyListeners();

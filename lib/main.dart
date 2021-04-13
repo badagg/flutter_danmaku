@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'danmu/Danmu.dart';
+import 'danmaku/index.dart';
 import 'dart:async';
-import './danmu/DanmuData.dart';
-import './danmu/models/danmu.dart';
+import 'danmaku_data.dart';
+import 'danmaku/models/danmaku.dart';
 
 void main() {
   runApp(MyApp());
@@ -18,22 +18,24 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page2'),
+      home: DanmukuDemo(title: 'Flutter Demo Home Page2'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+
+
+class DanmukuDemo extends StatefulWidget {
+  DanmukuDemo({Key key, this.title}) : super(key: key);
 
   final String title;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _DanmukuDemoState createState() => _DanmukuDemoState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  final List<DanmuItemData> data = DanmuData.get();
+class _DanmukuDemoState extends State<DanmukuDemo> {
+  final List<DanmakuItemModel> data = DanmuData.get();
 
   bool isPause = true;
   Timer timer;
@@ -42,7 +44,7 @@ class _MyHomePageState extends State<MyHomePage> {
     double fps = (1000 / 60);
     // 模拟播放timeline
     timer = Timer.periodic(Duration(milliseconds: fps.toInt()), (timer) {
-      danmuKey.currentState.start();
+      danmakuKey.currentState.start();
     });
   }
 
@@ -51,18 +53,22 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar( title: Text(widget.title),),
-      body: Danmu(
-        key: danmuKey,
+      body: Danmaku(
+        key: danmakuKey,
         data: data,
       ),
       floatingActionButton: FloatingActionButton(
         child: Icon(isPause ? Icons.play_arrow : Icons.pause),
         onPressed: () {
           setState(() {
-            isPause = danmuKey.currentState.pause();
+            isPause = danmakuKey.currentState.pause();
             isPause ? pause() : start();
           });
         },

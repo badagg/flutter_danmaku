@@ -1,14 +1,14 @@
-import '../public/utils.dart';
-import '../assets/xml.dart';
-import 'models/danmu.dart';
+import 'public/utils.dart';
+import 'assets/xml.dart';
+import 'danmaku/models/danmaku.dart';
 
 
 class DanmuData {
-  static List<DanmuItemData> get() {
+  static List<DanmakuItemModel> get() {
     final Map<String, dynamic> dm = xml2json(xml);
   
     final list = dm['i']['d'];
-    List<DanmuItemData> dmList = [];
+    List<DanmakuItemModel> dmList = [];
 
     for(var item in list) {
       var p = item['@p'].toString().split(',');
@@ -23,7 +23,7 @@ class DanmuData {
         'dmid': p[7],
         'text': item['\$']
       };
-      dmList.add(DanmuItemData.fromMap(map));
+      dmList.add(DanmakuItemModel.fromMap(map));
     }
     
     return dmList;
