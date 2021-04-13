@@ -15,3 +15,6 @@ Danmu(key: danmuKey, data: data);
 // api
 danmuKey.currentState.start();
 ```
+
+# preview
+![avatar](https://raw.githubusercontent.com/badagg/flutter_danmaku/master/lib/assets/danmaku_preview.gif)
