@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'danmu/Danmu.dart';
 import 'dart:async';
+import './danmu/DanmuData.dart';
+import './danmu/models/danmu.dart';
 
 void main() {
   runApp(MyApp());
@@ -31,12 +33,16 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final List<DanmuItemData> data = DanmuData.get();
+
   bool isPause = true;
   Timer timer;
 
   void start() {
-    timer = Timer.periodic(Duration(milliseconds: 100), (timer) {
-      danmuKey.currentState.insert();
+    double fps = (1000 / 60);
+    // 模拟播放timeline
+    timer = Timer.periodic(Duration(milliseconds: fps.toInt()), (timer) {
+      danmuKey.currentState.start();
     });
   }
 
@@ -50,6 +56,7 @@ class _MyHomePageState extends State<MyHomePage> {
       // appBar: AppBar( title: Text(widget.title),),
       body: Danmu(
         key: danmuKey,
+        data: data,
       ),
       floatingActionButton: FloatingActionButton(
         child: Icon(isPause ? Icons.play_arrow : Icons.pause),

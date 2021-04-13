@@ -1,16 +1,17 @@
-# c8u_desktop
+# flutter_danmaku
+flutter版 弹幕实现
 
-A new Flutter project.
+- xml格式解析
+- 弹幕防撞(防重叠)
+- 弹幕轨道个数根据容器高度自适应
+- 弹幕方向可设置
 
-## Getting Started
+# use
 
-This project is a starting point for a Flutter application.
+```dart
+// widget
+Danmu(key: danmuKey, data: data);
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+// api
+danmuKey.currentState.start();
+```

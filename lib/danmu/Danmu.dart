@@ -1,36 +1,41 @@
 import 'package:c8u_desktop/danmu/models/danmu.dart';
 import 'package:flutter/material.dart';
-import 'DanmuData.dart';
+import 'dart:math';
 import './DanmuItem.dart';
 import './controller.dart';
 
 GlobalKey<_DanmuState> danmuKey = GlobalKey();
 
+// 弹幕排序
+List<DanmuItemData> _sortBySendTime(List data) {
+  data.sort((a, b) => a.stime.compareTo(b.stime));
+  return data;
+}
+
 class Danmu extends StatefulWidget {
-  Danmu({Key key}) : super(key: key);
+  Danmu({Key key, this.data}) : super(key: key);
+
+  final List<DanmuItemData> data;
 
   @override
   _DanmuState createState() => _DanmuState();
 }
 
 class _DanmuState extends State<Danmu> {
-  final List<DanmuItemData> dmData = DanmuData.get();
-
-  final List<DanmuItem> dmList = [];
-
-  double _height;
-  double _width;
-  int index = 0;
-
   DanmuController _danmuController =
       DanmuController(isPause: true, pauseTimeStamp: 0);
+  List<DanmuItemData> _data;
+  List<DanmuItemData> _preload;
+  List<DanmuItem> _dmList = [];
+  double _height;
+  double _width;
 
   Map<String, dynamic> pipelines = Map();
-  Map _getPipeLine(dm) {
-    Map<String, dynamic> result = {'line': 0.0, 'duration': dm.duration};
+  Map _getPipeLine(DanmuItemData danmu) {
+    Map<String, dynamic> result = {'line': 0.0, 'duration': danmu.duration};
 
-    int pipelineMaxCount = _height ~/ (dm.size + 5);
-    double duration = _getDanmuDuration(dm);
+    int pipelineMaxCount = _height ~/ (danmu.size + 5);
+    double duration = _getDanmuDuration(danmu);
 
     int newTime = DateTime.now().millisecondsSinceEpoch;
 
@@ -39,13 +44,13 @@ class _DanmuState extends State<Danmu> {
         var old = pipelines['$i'];
         var oldW = _getDanmuWidth(old['danmu']);
         var oldV = _width * 2 / _getDanmuDuration(old['danmu']);
-        var newV = _width * 2 / _getDanmuDuration(dm);
-        var newT = _max((_width + oldW) / oldV - _width / newV, oldW / oldV);
-        
+        var newV = _width * 2 / _getDanmuDuration(danmu);
+        var newT = max((_width + oldW) / oldV - _width / newV, oldW / oldV);
+
         bool canInsert = newTime - old['stime'] > newT;
         if (old['stime'] == 0 || canInsert) {
           result['line'] = i;
-          pipelines['$i'] = {'stime': newTime, 'danmu': dm};
+          pipelines['$i'] = {'stime': newTime, 'danmu': danmu};
           break;
         }
 
@@ -54,7 +59,7 @@ class _DanmuState extends State<Danmu> {
           result['line'] = -1;
         }
       } else {
-        pipelines['$i'] = {'stime': 0, 'danmu': dm};
+        pipelines['$i'] = {'stime': 0, 'danmu': danmu};
         pipelines['0']['stime'] = newTime;
       }
     }
@@ -63,23 +68,17 @@ class _DanmuState extends State<Danmu> {
     return result;
   }
 
-  double _getDanmuWidth(dm) {
-    double dmWidth = dm.text.length * dm.size + 20;
+  double _getDanmuWidth(DanmuItemData danmu) {
+    double dmWidth = danmu.text.length * danmu.size + 20;
     return dmWidth > _width ? _width : dmWidth;
   }
 
-  double _getDanmuDuration(dm) {
-    return (_width * 2) / ((_getDanmuWidth(dm) + _width) / dm.duration);
+  double _getDanmuDuration(DanmuItemData danmu) {
+    return (_width * 2) / ((_getDanmuWidth(danmu) + _width) / danmu.duration);
   }
 
-  double _max(a, b) {
-    return a >= b ? a : b;
-  }
-
-  void insert() {
-    if (index > dmData.length - 1) index = 0;
-    DanmuItemData data = dmData[index++];
-    Map pipe = _getPipeLine(data);
+  void _insert(DanmuItemData danmu) {
+    Map pipe = _getPipeLine(danmu);
     double line = pipe['line'].toDouble();
     int duration = pipe['duration'];
 
@@ -87,16 +86,15 @@ class _DanmuState extends State<Danmu> {
       return;
     }
 
-    dmList.add(DanmuItem(
+    _dmList.add(DanmuItem(
         key: UniqueKey(),
         controller: _danmuController,
-        id: index,
-        text: data.text,
-        top: line * (data.size + 5),
-        size: data.size,
+        text: danmu.text,
+        top: line * (danmu.size + 5),
+        size: danmu.size,
         duration: duration,
         onComplete: (id) {
-          removeDanmuItemById(id);
+          _removeDanmuItemById(id);
         }));
     setState(() {});
   }
@@ -109,9 +107,48 @@ class _DanmuState extends State<Danmu> {
     return _danmuController.isPause;
   }
 
-  void removeDanmuItemById(id) {
-    dmList.remove(id);
+  void _removeDanmuItemById(id) {
+    _dmList.remove(id);
     setState(() {});
+  }
+
+  int lastInterval = 0;
+  void _insertPreloadList() {
+    List<DanmuItemData> preload = [];
+    for (var i = 0; i < _data.length; i++) {
+      if (_data[i].stime >= lastInterval && _data[i].stime < lastInterval + 1) {
+        preload.add(_data[i]);
+      }
+    }
+    _preload = preload;
+
+    lastInterval++;
+  }
+
+  int fps = 0;
+  void start() {
+    // 按照一秒的间隔 把数据装载到预发list
+    if (fps % 60 == 0) {
+      _insertPreloadList();
+    }
+
+    // 按照外部fps的刷新率 来从预发里面找到范围内的弹幕并渲染到舞台
+    double _start = fps / 60;
+    double _end = (fps + 1) / 60;
+    for (var i = 0; i < _preload.length; i++) {
+      if (_preload[i].stime >= _start && _preload[i].stime < _end) {
+        // print('${_preload[i].stime}, ${_preload[i].text}');
+        _insert(_preload[i]);
+      }
+    }
+
+    fps++;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _data = _sortBySendTime(widget.data);
   }
 
   @override
@@ -124,7 +161,7 @@ class _DanmuState extends State<Danmu> {
 
       return Stack(
         alignment: Alignment.topRight,
-        children: []..addAll(dmList),
+        children: []..addAll(_dmList),
       );
     });
   }
