@@ -31,12 +31,9 @@ class _DanmuState extends State<Danmu> {
   double _width;
 
   Map<String, dynamic> pipelines = Map();
-  Map _getPipeLine(DanmuItemData danmu) {
-    Map<String, dynamic> result = {'line': 0.0, 'duration': danmu.duration};
-
-    int pipelineMaxCount = _height ~/ (danmu.size + 5);
-    double duration = _getDanmuDuration(danmu);
-
+  int _getPipeLine(DanmuItemData danmu) {
+    int line = 0;
+    int pipelineMaxCount = _height ~/ danmu.size;
     int newTime = DateTime.now().millisecondsSinceEpoch;
 
     for (var i = 0; i < pipelineMaxCount; i++) {
@@ -49,14 +46,14 @@ class _DanmuState extends State<Danmu> {
 
         bool canInsert = newTime - old['stime'] > newT;
         if (old['stime'] == 0 || canInsert) {
-          result['line'] = i;
+          line = i;
           pipelines['$i'] = {'stime': newTime, 'danmu': danmu};
           break;
         }
 
         // 同一时间弹幕数量太多 会被过滤掉
         if (i == pipelineMaxCount - 1 && !canInsert) {
-          result['line'] = -1;
+          line = -1;
         }
       } else {
         pipelines['$i'] = {'stime': 0, 'danmu': danmu};
@@ -64,12 +61,11 @@ class _DanmuState extends State<Danmu> {
       }
     }
 
-    result['duration'] = duration.toInt();
-    return result;
+    return line;
   }
 
   double _getDanmuWidth(DanmuItemData danmu) {
-    double dmWidth = danmu.text.length * danmu.size + 20;
+    double dmWidth = danmu.text.length * danmu.size;
     return dmWidth > _width ? _width : dmWidth;
   }
 
@@ -78,9 +74,8 @@ class _DanmuState extends State<Danmu> {
   }
 
   void _insert(DanmuItemData danmu) {
-    Map pipe = _getPipeLine(danmu);
-    double line = pipe['line'].toDouble();
-    int duration = pipe['duration'];
+    double line = _getPipeLine(danmu).toDouble();
+    int duration = _getDanmuDuration(danmu).toInt();
 
     if (line == -1) {
       return;
@@ -90,7 +85,7 @@ class _DanmuState extends State<Danmu> {
         key: UniqueKey(),
         controller: _danmuController,
         text: danmu.text,
-        top: line * (danmu.size + 5),
+        top: line * danmu.size,
         size: danmu.size,
         duration: duration,
         onComplete: (id) {
@@ -101,8 +96,6 @@ class _DanmuState extends State<Danmu> {
 
   bool pause() {
     _danmuController.isPause = !_danmuController.isPause;
-    _danmuController.pauseTimeStamp =
-        _danmuController.isPause ? DateTime.now().millisecondsSinceEpoch : 0;
     _danmuController.trigger();
     return _danmuController.isPause;
   }
